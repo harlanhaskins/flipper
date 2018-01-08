@@ -8,10 +8,18 @@
 #ifndef __libflipper_h__
 #define __libflipper_h__
 
-#include <flipper/types.h>
-
 /* The current version of libflipper. */
 #define LF_VERSION 0x0001
+
+static inline int lf_get_version(void) {
+	return LF_VERSION;
+}
+
+#include <flipper/types.h>
+#include <flipper/fmr.h>
+#include <flipper/endpoint.h>
+#include <flipper/ll.h>
+#include <flipper/error.h>
 
 /* Configuration information for USB. */
 #define CARBON_USB_MANUFACTURER    L"flipper.io"
@@ -31,7 +39,7 @@
 #define LF_UART_TIMEOUT_MS 100
 
 /* NOTE: Summing the size parameters of each endpoints below should be less than or equal to 160. */
-#define USB_IN_MASK            0x80
+#define USB_IN_MASK             0x80
 
 #define INTERRUPT_IN_ENDPOINT	(0x01 | USB_IN_MASK)
 #define INTERRUPT_IN_SIZE		16
@@ -82,8 +90,6 @@ void lf_set_debug_level(int level);
 #define little(x) ((((uint16_t)(x)) << 8 ) | (((uint16_t)(x)) >> 8))
 #define little32(x) ((((uint32_t)(x)) << 16 ) | (((uint32_t)(x)) >> 16))
 
-#include <flipper/error.h>
-
 /* Macros that quantify device attributes. */
 #define lf_device_8bit (1 << 1)
 #define lf_device_16bit (1 << 2)
@@ -111,16 +117,12 @@ struct _lf_device {
 	/* The device's selector function. Mutates modules state as appropriate for the device. */
 	int (* select)(struct _lf_device *device);
 	/* The device's destructor. */
-	int (* destroy)(struct _lf_device *device);
+	int (* release)(struct _lf_device *device);
 	/* The device's context. */
 	void *_ctx;
 	/* The current error state of the device. */
 	lf_error_t error;
 };
-
-typedef struct _lf_ll *lf_event_list;
-extern lf_event_list lf_registered_events;
-#define lf_get_event_list() lf_registered_events
 
 typedef struct _lf_ll *lf_device_list;
 extern lf_device_list lf_attached_devices;
@@ -141,8 +143,6 @@ struct _lf_module {
 	lf_crc_t identifier;
 	/* The module's loaded index. */
 	int index;
-	/* The pointer to a pointer to the device upon which the module's counterpart is located. */
-	struct _lf_device *device;
 	/* The module's binary data. */
 	void *data;
 	/* The binary data size. */
@@ -157,16 +157,13 @@ struct _lf_module {
 		LF_VERSION, \
 		0, \
 		-1, \
-		NULL, \
 		data, \
 		len \
 	};
 
-#define LF_MODULE_SET_DEVICE_AND_ID(module, _device, _id) module.device = _device; module.index = _id;
-
-extern struct _lf_device lf_self;
-
-struct _lf_device *lf_device_create(struct _lf_endpoint *endpoint, int (* select)(struct _lf_device *device), int (* destroy)(struct _lf_device *device), size_t context_size);
+/* Creates a device. */
+struct _lf_device *lf_device_create(struct _lf_endpoint *endpoint, int (* select)(struct _lf_device *device), int (* release)(struct _lf_device *device), size_t context_size);
+/* Releases a device. */
 int lf_device_release(struct _lf_device *device);
 
 /* Attaches to a device. */
@@ -174,16 +171,16 @@ int lf_attach(struct _lf_device *device);
 int lf_detach(struct _lf_device *device);
 int lf_select(struct _lf_device *device);
 
-#include <flipper/fmr.h>
-#include <flipper/endpoint.h>
-#include <flipper/ll.h>
-
-/* Performs a remote procedure call to a module's function. */
-lf_return_t lf_invoke(struct _lf_module *module, fmr_function function, fmr_type ret, struct _lf_ll *args);
-/* Moves data from the address space of the host to that of the device. */
-lf_return_t lf_push(struct _lf_module *module, fmr_function function, void *source, lf_size_t length, struct _lf_ll *args);
-/* Moves data from the address space of the device to that of the host. */
-lf_return_t lf_pull(struct _lf_module *module, fmr_function function, void *destination, lf_size_t length, struct _lf_ll *args);
+/* Call a function on the device. */
+lf_return_t lf_invoke(struct _lf_device *device, struct _lf_module *module, fmr_function function, fmr_type ret, struct _lf_ll *args);
+/* Copy data from the host to the device. */
+lf_return_t lf_push(struct _lf_device *device, struct _lf_module *module, fmr_function function, void *source, lf_size_t length, struct _lf_ll *args);
+/* Copy data from the device to the host. */
+lf_return_t lf_pull(struct _lf_device *device, struct _lf_module *module, fmr_function function, void *destination, lf_size_t length, struct _lf_ll *args);
+/* Load a package onto a device. */
+int lf_load(struct _lf_device *device, void *source, lf_size_t length);
+/* Binds a module to a device. */
+int lf_bind(struct _lf_device *device, struct _lf_module *module);
 
 /* Closes the library. */
 int lf_exit(void);
@@ -199,11 +196,6 @@ int lf_get_result(struct _lf_device *device, struct _fmr_result *result);
 int lf_transfer(struct _lf_device *device, struct _fmr_packet *packet);
 /* Retrieves a packet from the specified device. */
 int lf_retrieve(struct _lf_device *device, struct _fmr_result *response);
-/* Binds a module structure to its device counterpart. */
-int lf_bind(struct _lf_module *module, struct _lf_device *device);
-
-/* Experimental: Load an application into RAM and execute it. */
-int lf_load(void *source, lf_size_t length, struct _lf_device *device);
 
 /* Prints verbose information about the packet disassembly. */
 void lf_debug_packet(struct _fmr_packet *packet, size_t length);

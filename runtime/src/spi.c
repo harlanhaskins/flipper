@@ -18,35 +18,35 @@ const struct _spi spi = {
 };
 
 LF_WEAK int spi_configure() {
-	return lf_invoke(&_spi, _spi_configure, fmr_int_t, NULL);
+	return lf_invoke(lf_get_current_device(), &_spi, _spi_configure, fmr_int_t, NULL);
 }
 
 LF_WEAK void spi_enable(void) {
-	lf_invoke(&_spi, _spi_enable, fmr_int_t, NULL);
+	lf_invoke(lf_get_current_device(), &_spi, _spi_enable, fmr_int_t, NULL);
 }
 
 LF_WEAK void spi_disable(void) {
-	lf_invoke(&_spi, _spi_disable, fmr_int_t, NULL);
+	lf_invoke(lf_get_current_device(), &_spi, _spi_disable, fmr_int_t, NULL);
 }
 
 LF_WEAK uint8_t spi_ready(void) {
-	return lf_invoke(&_spi, _spi_ready, fmr_int_t, NULL);
+	return lf_invoke(lf_get_current_device(), &_spi, _spi_ready, fmr_int_t, NULL);
 }
 
 LF_WEAK void spi_put(uint8_t byte) {
-	lf_invoke(&_spi, _spi_put, fmr_int_t, fmr_args(fmr_infer(byte)));
+	lf_invoke(lf_get_current_device(), &_spi, _spi_put, fmr_int_t, fmr_args(fmr_infer(byte)));
 }
 
 LF_WEAK uint8_t spi_get(void) {
-	return lf_invoke(&_spi, _spi_get, fmr_int_t, NULL);
+	return lf_invoke(lf_get_current_device(), &_spi, _spi_get, fmr_int_t, NULL);
 }
 
 LF_WEAK int spi_push(void *source, uint32_t length) {
-	return lf_push(&_spi, _spi_push, source, length, NULL);
+	return lf_push(lf_get_current_device(), &_spi, _spi_push, source, length, NULL);
 }
 
 LF_WEAK int spi_pull(void *destination, uint32_t length) {
-	return lf_pull(&_spi, _spi_pull, destination, length, NULL);
+	return lf_pull(lf_get_current_device(), &_spi, _spi_pull, destination, length, NULL);
 }
 
 #endif

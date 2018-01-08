@@ -268,8 +268,6 @@ int enter_normal_mode(void) {
 	return lf_error;
 }
 
-int carbon_select_u2_gpio(struct _lf_device *device);
-
 int main(int argc, char *argv[]) {
 
 	/* Ensure the correct argument count. */
@@ -281,8 +279,8 @@ int main(int argc, char *argv[]) {
 	//lf_set_debug_level(LF_DEBUG_LEVEL_ALL);
 
 	/* Attach to a Flipper device. */
-	struct _lf_device *device = flipper.attach();
-	carbon_select_u2_gpio(device);
+	flipper.attach();
+	#warning Must ensure that U2 GPIO is selected here.
 
 
 begin: ;

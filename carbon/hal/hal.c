@@ -46,11 +46,11 @@ failure:
 	return lf_error;
 }
 
-int carbon_destroy(struct _lf_device *device);
+int carbon_release(struct _lf_device *device);
 
 struct _lf_device *carbon_attach_endpoint(struct _lf_endpoint *endpoint, struct _lf_device *_u2, struct _lf_device *_4s) {
 	/* Create the parent carbon device. */
-	struct _lf_device *carbon = lf_device_create(endpoint, carbon_select, carbon_destroy, sizeof(struct _carbon_context));
+	struct _lf_device *carbon = lf_device_create(endpoint, carbon_select, carbon_release, sizeof(struct _carbon_context));
 	/* Set the 4s's context. */
 	struct _carbon_context *context = carbon->_ctx;
 	/* Set the carbon's u2 and 4s sub-devices. */
@@ -99,7 +99,7 @@ int carbon_attach(void) {
 	return lf_success;
 }
 
-int carbon_destroy(struct _lf_device *device) {
+int carbon_release(struct _lf_device *device) {
 	if (device) {
 		struct _carbon_context *context = (struct _carbon_context *)device->_ctx;
 		lf_device_release(context->_u2);

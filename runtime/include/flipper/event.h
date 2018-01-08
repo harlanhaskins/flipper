@@ -21,6 +21,10 @@ typedef struct _lf_event {
 	lf_observer_list observers;
 } lf_event;
 
+typedef struct _lf_ll *lf_event_list;
+extern lf_event_list lf_registered_events;
+#define lf_get_event_list() lf_registered_events
+
 typedef void (* lf_event_handler_func)(lf_event *event);
 
 struct _lf_event *lf_event_create(lf_event_id _id, lf_event_handler_func handler, void *_ctx);
