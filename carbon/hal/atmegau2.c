@@ -1,7 +1,6 @@
 /* This is done in a separate compilation unit so that the atmegau2 module index enumerations are correct. */
 
 #define __private_include__
-#include <flipper/libflipper.h>
 #include <flipper/carbon.h>
 #include <flipper/atmegau2/modules.h>
 
